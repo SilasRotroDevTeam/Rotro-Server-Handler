@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Rotro (Beta Testing!)</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{overflow:hidden;font-family:'Nunito Sans',sans-serif;background:#2e3142;}
+canvas{display:block;}
+#loginScreen{position:absolute;inset:0;background:#3a3f55;display:flex;align-items:center;justify-content:center;gap:40px;z-index:100;}
+.login-left{background:#23263a;border-radius:16px;padding:16px;width:360px;display:flex;flex-direction:column;gap:12px;}
+.update-title{background:white;border:3px solid #e8281e;border-radius:10px;padding:10px 16px;font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;}
+.update-title .dot{width:14px;height:14px;background:#e8281e;border-radius:2px;flex-shrink:0;}
+.update-body{background:white;border:3px solid #e8281e;border-radius:10px;padding:14px 16px;min-height:220px;font-size:14px;color:#111;}
+.update-body ul{list-style:disc;padding-left:18px;line-height:1.8;}
+.login-right{display:flex;flex-direction:column;align-items:center;gap:14px;width:340px;}
+.rotro-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:52px;color:white;display:flex;align-items:center;gap:10px;letter-spacing:-1px;}
+.rotro-title .sq{width:22px;height:22px;background:#e8281e;border-radius:4px;}
+.rotro-sub{font-family:'Nunito',sans-serif;font-weight:700;font-size:14px;color:white;letter-spacing:0.5px;}
+.login-card{background:#23263a;border-radius:16px;padding:18px;width:100%;display:flex;flex-direction:column;gap:10px;}
+.login-card input{background:white;border:3px solid #e8281e;border-radius:50px;padding:10px 20px;font-family:'Nunito',sans-serif;font-weight:700;font-size:15px;text-align:center;outline:none;width:100%;color:#111;}
+.login-card input::placeholder{color:#bbb;}
+#loginBtn{background:white;border:3px solid #e8281e;border-radius:50px;padding:10px 20px;font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;cursor:pointer;width:100%;color:#111;transition:background 0.15s,color 0.15s;}
+#loginBtn:hover{background:#e8281e;color:white;}
+.login-hints{font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;color:white;text-align:center;line-height:1.7;}
+#loginError{color:#ff6b6b;font-size:12px;font-family:'Nunito',sans-serif;font-weight:700;text-align:center;min-height:16px;}
+#gameMenu{position:absolute;inset:0;background:#3a3f55;display:none;flex-direction:column;z-index:99;}
+.menu-header{background:#23263a;padding:12px 20px;display:flex;align-items:center;gap:10px;}
+.menu-header .title{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:white;display:flex;align-items:center;gap:8px;}
+.menu-header .title .sq{width:16px;height:16px;background:#e8281e;border-radius:3px;}
+.menu-body{flex:1;display:flex;gap:16px;padding:16px;overflow:hidden;}
+.menu-left{display:flex;flex-direction:column;gap:10px;width:300px;flex-shrink:0;}
+.avatar-editor-card{background:#23263a;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;flex:1;}
+.avatar-editor-top{display:flex;gap:8px;flex:1;min-height:0;}
+.avatar-toolbar{display:flex;flex-direction:column;gap:6px;align-items:center;background:#1a1d2e;border-radius:10px;padding:8px 6px;width:40px;flex-shrink:0;}
+.tool-btn{width:30px;height:30px;border-radius:7px;border:2px solid transparent;background:rgba(255,255,255,0.07);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s,border-color 0.15s;flex-shrink:0;}
+.tool-btn:hover{background:rgba(255,255,255,0.15);}
+.tool-btn.active{border-color:#e8281e;background:rgba(232,40,30,0.18);}
+.tool-btn svg{pointer-events:none;}
+.tool-divider{width:22px;height:1px;background:rgba(255,255,255,0.1);margin:2px 0;}
+.avatar-viewer-wrap{flex:1;background:white;border:3px solid #e8281e;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;min-height:200px;}
+#avatarCanvas{display:block;cursor:crosshair;}
+.colour-picker-row{display:flex;flex-direction:column;gap:6px;}
+.colour-swatches{display:flex;gap:5px;flex-wrap:wrap;background:#1a1d2e;border-radius:10px;padding:8px;}
+.cswatch{width:26px;height:26px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:transform 0.12s,border-color 0.12s;}
+.cswatch:hover{transform:scale(1.18);}
+.cswatch.active{border-color:#fff;transform:scale(1.18);}
+.colour-custom-row{display:flex;gap:6px;align-items:center;background:#1a1d2e;border-radius:10px;padding:6px 8px;}
+.colour-custom-row label{font-family:'Nunito',sans-serif;font-weight:700;font-size:11px;color:#aaa;white-space:nowrap;}
+#customColourInput{width:34px;height:26px;border:none;border-radius:5px;cursor:pointer;padding:0;background:none;}
+.selected-colour-preview{width:26px;height:26px;border-radius:5px;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;}
+.profile-card{background:#23263a;border-radius:14px;padding:12px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;color:white;text-align:center;line-height:2;}
+.profile-card .divider{border:none;border-top:1px solid #444;margin:2px 0;}
+.menu-right{flex:1;display:flex;flex-direction:column;gap:12px;}
+.friend-card,.game-card{background:#23263a;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.card-inner{background:white;border:3px solid #e8281e;border-radius:10px;padding:10px;flex:1;overflow-y:auto;}
+.card-title-bar{background:white;border:3px solid #e8281e;border-radius:8px;padding:8px 14px;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;text-align:center;}
+.game-list-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:background 0.1s;}
+.game-list-item:hover{background:#f0f0f0;}
+.game-thumb{width:44px;height:32px;border-radius:6px;background:#e8281e;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-family:'Nunito',sans-serif;font-weight:800;}
+.play-btn{background:#e8281e;color:white;border:none;border-radius:8px;padding:4px 12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;cursor:pointer;margin-left:auto;transition:opacity 0.15s;}
+.play-btn:hover{opacity:0.85;}
+.friend-card{flex-shrink:0;max-height:180px;}
+.game-card{flex:1;}
+.game-card .card-inner{min-height:0;}
+#gameUI{position:absolute;inset:0;pointer-events:none;display:none;z-index:10;}
+#topBar{position:absolute;top:10px;left:10px;display:flex;gap:4px;background:rgba(35,38,58,0.75);border-radius:50px;padding:6px 8px;pointer-events:all;backdrop-filter:blur(4px);}
+.topBtn{width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(35,38,58,0.75);transition:background 0.15s;pointer-events:all;}
+.topBtn:hover{background:rgba(35,38,58,0.95);}
+.topBtn svg{pointer-events:none;}
+#chatBox{position:absolute;bottom:12px;left:12px;width:340px;pointer-events:all;display:none;}
+#chatBox.visible{display:flex;flex-direction:column;}
+#chatLog{background:rgba(35,38,58,0.75);border-radius:12px 12px 0 0;padding:8px 10px;max-height:180px;overflow-y:auto;font-family:'Nunito Sans',sans-serif;font-size:13px;color:white;backdrop-filter:blur(4px);min-height:32px;}
+#chatLog .msg{line-height:1.6;}
+#chatLog .msg .uname{font-weight:700;color:#ff7b72;}
+#chatLog .msg.system{color:#aaa;font-style:italic;}
+#chatInputRow{display:flex;align-items:center;gap:6px;background:rgba(35,38,58,0.85);border-radius:0 0 12px 12px;padding:7px 10px;backdrop-filter:blur(4px);}
+#chatInputEl{flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:5px 10px;font-family:'Nunito Sans',sans-serif;font-size:13px;color:white;outline:none;}
+#chatInputEl::placeholder{color:#666;}
+#chatSendBtn{background:#e8281e;color:white;border:none;border-radius:8px;padding:5px 12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;cursor:pointer;flex-shrink:0;}
+#chatSendBtn:hover{opacity:0.85;}
+.bubbleChat{position:absolute;background:rgba(35,38,58,0.85);color:white;padding:5px 10px;border-radius:8px;font-size:12px;font-family:'Nunito Sans',sans-serif;pointer-events:none;white-space:nowrap;transform:translate(-50%,-160%);backdrop-filter:blur(4px);}
+#settingsModal{position:absolute;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:50;pointer-events:all;}
+.modal-card{background:#23263a;border-radius:16px;padding:20px;width:320px;color:white;font-family:'Nunito',sans-serif;font-weight:700;}
+.modal-card h3{font-size:18px;margin-bottom:14px;font-weight:900;}
+.modal-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;font-size:14px;}
+.modal-row:last-child{border-bottom:none;}
+.modal-card button.close-btn{margin-top:14px;width:100%;background:#e8281e;color:white;border:none;border-radius:8px;padding:10px;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;cursor:pointer;}
+select.setting-sel{background:#3a3f55;color:white;border:none;border-radius:6px;padding:4px 8px;font-family:'Nunito',sans-serif;font-weight:700;}
+.playerTag{position:absolute;background:rgba(35,38,58,0.8);color:white;font-size:11px;font-family:'Nunito',sans-serif;font-weight:700;padding:2px 8px;border-radius:6px;pointer-events:none;transform:translate(-50%,-100%);white-space:nowrap;}
+#mpPanel{position:absolute;top:10px;right:10px;background:rgba(35,38,58,0.75);border-radius:12px;padding:10px 12px;min-width:140px;backdrop-filter:blur(4px);display:none;pointer-events:none;}
+#mpPanel .mp-title{font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:#e8281e;margin-bottom:6px;}
+.mp-player{font-family:'Nunito Sans',sans-serif;font-size:12px;color:white;padding:2px 0;display:flex;align-items:center;gap:6px;}
+.mp-dot{width:8px;height:8px;border-radius:50%;background:#4caf50;flex-shrink:0;}
+#connectionStatus{position:absolute;bottom:12px;right:12px;background:rgba(35,38,58,0.85);color:#aaa;font-family:'Nunito',sans-serif;font-weight:700;font-size:11px;padding:5px 12px;border-radius:8px;pointer-events:none;backdrop-filter:blur(4px);}
+#connectionStatus.connected{color:#4caf50;}
+#connectionStatus.disconnected{color:#e8281e;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-left">
+    <div class="update-title"><span class="dot"></span>"Update Logs!"<span class="dot"></span></div>
+    <div class="update-body">
+      <ul>
+        <li>Now running on a dedicated 24/7 server!</li>
+        <li>No more invite links needed — just share the URL</li>
+        <li>Fixed: shadows are now short and natural</li>
+        <li>Fixed: Skin tone + shirt color fully apply to character</li>
+        <li>Shirt color customization added</li>
+        <li>Press T or / to open chat in-game</li>
+        <li>WASD: Move | Space: Jump | Shift: Sprint</li>
+        <li>Right-drag: Camera | V: First-person</li>
+      </ul>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="rotro-title"><span class="sq"></span>Rotro<span class="sq"></span></div>
+    <div class="rotro-sub">(Beta Testing!)</div>
+    <div class="rotro-sub" style="color:#aaa;font-size:12px;">Multiplayer 3D World &middot; Dedicated Server</div>
+    <div class="login-card">
+      <input type="text" id="loginUser" placeholder='"Username Here"' maxlength="24">
+      <input type="password" id="loginPass" placeholder='"Password Here"'>
+      <div id="loginError"></div>
+      <button id="loginBtn">Confirm</button>
+    </div>
+    <div class="login-hints">WASD: Move | Space: Jump | Shift: Sprint<br>Right-drag: Camera | V: First-person | T: Chat</div>
+  </div>
+</div>
+
+<div id="gameMenu">
+  <div class="menu-header">
+    <div class="title"><span class="sq"></span>Rotro (Beta Testing!)<span class="sq"></span></div>
+  </div>
+  <div class="menu-body">
+    <div class="menu-left">
+      <div class="avatar-editor-card">
+        <div class="avatar-editor-top">
+          <div class="avatar-toolbar">
+            <button class="tool-btn active" id="toolBucket" title="Paint Bucket">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 14c0 1.1.9 2 2 2s2-.9 2-2c0-.8-1-2.5-2-4-1 1.5-2 3.2-2 4z" fill="#e8281e"/><path d="M13.5 2.5l-9 9 3 3 9-9-3-3z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 11.5L2 14" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+            <button class="tool-btn" id="toolBrush" title="Paint Brush">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M14 2l4 4-9 9H5v-4l9-9z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 17c1-2 2-2 3-1s0 2-1 2-2-1-2-1z" fill="#e8281e"/></svg>
+            </button>
+            <div class="tool-divider"></div>
+            <button class="tool-btn" id="toolUndo" title="Undo">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 8H13a5 5 0 010 10H8" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 8L7 5M4 8L7 11" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="tool-btn" id="toolRedo" title="Redo">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M16 8H7a5 5 0 000 10h5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 8L13 5M16 8L13 11" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="avatar-viewer-wrap"><canvas id="avatarCanvas"></canvas></div>
+        </div>
+        <div class="colour-picker-row">
+          <div class="colour-swatches" id="colourSwatches"></div>
+          <div class="colour-custom-row">
+            <label>Custom:</label>
+            <input type="color" id="customColourInput" value="#e8281e">
+            <div class="selected-colour-preview" id="selectedColourPreview"></div>
+            <span style="font-family:'Nunito',sans-serif;font-weight:700;font-size:11px;color:#aaa;" id="selectedColourHex">#e8281e</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-card" id="profileCard">
+        <div id="profileUsername">Player Username</div>
+        <hr class="divider">
+        <div>About: Rotro Beta Tester</div>
+        <hr class="divider">
+        <div id="profileJoin">Join Date: 2025-01-01</div>
+      </div>
+    </div>
+    <div class="menu-right">
+      <div class="friend-card">
+        <div class="card-title-bar">Friend List</div>
+        <div class="card-inner" id="friendList"></div>
+      </div>
+      <div class="game-card">
+        <div class="card-title-bar">Game List</div>
+        <div class="card-inner" id="gameList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="gameUI">
+  <div id="topBar">
+    <button class="topBtn" id="btnGameMenu" title="Game Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="3" fill="#e8281e"/><rect x="5" y="6" width="10" height="1.5" rx="0.75" fill="white"/><rect x="5" y="9.25" width="10" height="1.5" rx="0.75" fill="white"/><rect x="5" y="12.5" width="10" height="1.5" rx="0.75" fill="white"/></svg>
+    </button>
+    <button class="topBtn" id="btnSettings" title="Settings">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" fill="#e8281e"/><path d="M10 3V1.5M10 18.5V17M3 10H1.5M18.5 10H17M4.9 4.9L3.8 3.8M16.2 16.2L15.1 15.1M4.9 15.1L3.8 16.2M15.1 4.9L16.2 3.8" stroke="#e8281e" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <button class="topBtn" id="btnChat" title="Chat">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 3h14a1.5 1.5 0 011.5 1.5v8A1.5 1.5 0 0117 14H7l-4 3V4.5A1.5 1.5 0 013 3z" fill="#e8281e"/><circle cx="6.5" cy="9" r="1" fill="white"/><circle cx="10" cy="9" r="1" fill="white"/><circle cx="13.5" cy="9" r="1" fill="white"/></svg>
+    </button>
+  </div>
+  <div id="mpPanel">
+    <div class="mp-title">PLAYERS ONLINE</div>
+    <div id="mpPlayerList"></div>
+  </div>
+  <div id="chatBox">
+    <div id="chatLog"></div>
+    <div id="chatInputRow">
+      <input type="text" id="chatInputEl" placeholder="Say something..." maxlength="120">
+      <button id="chatSendBtn">Send</button>
+    </div>
+  </div>
+  <div id="connectionStatus">Connecting...</div>
+</div>
+
+<div id="settingsModal">
+  <div class="modal-card">
+    <h3>&#9881; Settings</h3>
+    <div class="modal-row"><span>Graphics</span><select class="setting-sel"><option>High</option><option>Medium</option><option>Low</option></select></div>
+    <div class="modal-row"><span>Camera Mode</span><select class="setting-sel" id="camModeSet"><option>Third Person</option><option>First Person</option></select></div>
+    <div class="modal-row"><span>Chat Filter</span><select class="setting-sel"><option>Safe Chat</option><option>Full Chat</option></select></div>
+    <div class="modal-row"><span>Music Volume</span><input type="range" min="0" max="100" value="70" style="width:100px;"></div>
+    <button class="close-btn" id="closeSettings">Close</button>
+  </div>
+</div>
+
+<!-- Socket.io is served automatically by the server at /socket.io/socket.io.js -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+// ======================= SOCKET.IO CONNECTION =======================
+const socket = io();   // connects back to whatever server served this page
+
+const connStatus = document.getElementById("connectionStatus");
+socket.on("connect",    () => { connStatus.textContent = "Connected"; connStatus.className = "connected"; });
+socket.on("disconnect", () => { connStatus.textContent = "Disconnected"; connStatus.className = "disconnected"; });
+socket.on("connect_error", () => { connStatus.textContent = "Connection failed"; connStatus.className = "disconnected"; });
+
+// ======================= STATE =======================
+let username = "";
+let inGame = false;
+let chatTyping = false;
+
+// socketId -> { grp, mats, la, ra, ll, rl, name, animT, moving }
+const remotePlayers = {};
+
+// ======================= THREE SCENE =======================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+renderer.domElement.style.cssText = "position:absolute;top:0;left:0;z-index:1;";
+
+// ===== FIXED LIGHTING & SHADOWS =====
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+sunLight.position.set(50, 120, 80);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width  = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far  = 400;
+sunLight.shadow.camera.left   = -80;
+sunLight.shadow.camera.right  =  80;
+sunLight.shadow.camera.top    =  80;
+sunLight.shadow.camera.bottom = -80;
+sunLight.shadow.bias = -0.001;
+scene.add(sunLight);
+
+const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(10,16,16), new THREE.MeshBasicMaterial({color:0xffffcc}));
+sunMesh.position.copy(sunLight.position); scene.add(sunMesh);
+
+const cloudTexture = new THREE.TextureLoader().load("https://threejs.org/examples/textures/skies/clouds1.jpg");
+cloudTexture.wrapS = cloudTexture.wrapT = THREE.RepeatWrapping; cloudTexture.repeat.set(2,2);
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(900,32,32), new THREE.MeshBasicMaterial({map:cloudTexture,side:THREE.BackSide,transparent:true,opacity:0.6})));
+
+const cvs = document.createElement("canvas"); cvs.width=512; cvs.height=512;
+const gCtx = cvs.getContext("2d");
+const gr = gCtx.createLinearGradient(0,0,512,512); gr.addColorStop(0,"#3b8d3b"); gr.addColorStop(1,"#2a6f2a");
+gCtx.fillStyle=gr; gCtx.fillRect(0,0,512,512);
+gCtx.strokeStyle="rgba(255,255,255,0.1)";
+for(let i=0;i<512;i+=64){gCtx.beginPath();gCtx.moveTo(i,0);gCtx.lineTo(i,512);gCtx.stroke();gCtx.beginPath();gCtx.moveTo(0,i);gCtx.lineTo(512,i);gCtx.stroke();}
+const groundTex = new THREE.CanvasTexture(cvs);
+groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping; groundTex.repeat.set(30,30);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(500,500), new THREE.MeshStandardMaterial({map:groundTex}));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+
+function addBox(x,y,z,w,h,d,color){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color}));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);}
+addBox(20,2,15,8,4,8,0xd4a96a); addBox(-25,1.5,10,6,3,6,0xa05c3b);
+addBox(0,1,30,10,2,10,0x888888); addBox(-15,2,-20,5,4,5,0xc8e6c9); addBox(30,1.5,-10,6,3,12,0xffcc80);
+
+// ===================== LOCAL PLAYER CHARACTER =======================
+const character = new THREE.Group(); scene.add(character);
+const hipHeight = 2.7;
+
+const torsoMat    = new THREE.MeshStandardMaterial({color: new THREE.Color("#d8c2ef")});
+const headMat     = new THREE.MeshStandardMaterial({color: new THREE.Color("#f9c5a0")});
+const leftArmMat  = new THREE.MeshStandardMaterial({color: new THREE.Color("#f9c5a0")});
+const rightArmMat = new THREE.MeshStandardMaterial({color: new THREE.Color("#f9c5a0")});
+const leftLegMat  = new THREE.MeshStandardMaterial({color: new THREE.Color("#333333")});
+const rightLegMat = new THREE.MeshStandardMaterial({color: new THREE.Color("#333333")});
+
+const torso = new THREE.Mesh(new THREE.BoxGeometry(1.6,1.8,0.8), torsoMat); torso.position.y=0; torso.castShadow=true; character.add(torso);
+const head  = new THREE.Mesh(new THREE.BoxGeometry(1.2,1.2,1.2), headMat);  head.position.y=1.6; head.castShadow=true; character.add(head);
+
+function makeLimb(geo, mat){ const j=new THREE.Group(); const m=new THREE.Mesh(geo,mat); m.castShadow=true; j.add(m); return j; }
+const armGeo = new THREE.BoxGeometry(0.8,1.8,0.8);
+const leftArm  = makeLimb(armGeo, leftArmMat);  leftArm.children[0].position.y=-0.9;  leftArm.position.set(-1.2,0.9,0);
+const rightArm = makeLimb(armGeo, rightArmMat); rightArm.children[0].position.y=-0.9; rightArm.position.set(1.2,0.9,0);
+const legGeo = new THREE.BoxGeometry(0.8,1.8,0.8);
+const leftLeg  = makeLimb(legGeo, leftLegMat);  leftLeg.children[0].position.y=-0.9;  leftLeg.position.set(-0.4,-0.9,0);
+const rightLeg = makeLimb(legGeo, rightLegMat); rightLeg.children[0].position.y=-0.9; rightLeg.position.set(0.4,-0.9,0);
+character.add(leftArm, rightArm, leftLeg, rightLeg);
+character.position.y = hipHeight;
+
+function applyLocalCustomization(){
+  if(typeof partColours==="undefined") return;
+  headMat.color.set(partColours.head);     torsoMat.color.set(partColours.torso);
+  leftArmMat.color.set(partColours.leftArm); rightArmMat.color.set(partColours.rightArm);
+  leftLegMat.color.set(partColours.leftLeg); rightLegMat.color.set(partColours.rightLeg);
+}
+
+// ======================= COLOUR SAVE/LOAD =======================
+function saveColoursForAccount(){ if(!username) return; try{ localStorage.setItem("rotro_colours_"+username, JSON.stringify(partColours)); }catch(e){} }
+function loadColoursForAccount(){
+  if(!username) return;
+  try{
+    const raw = localStorage.getItem("rotro_colours_"+username);
+    if(raw){ const saved=JSON.parse(raw); Object.keys(partColours).forEach(k=>{ if(saved[k]) partColours[k]=saved[k]; }); applyLocalCustomization(); colourHistory.length=0; colourHistory.push(JSON.stringify(partColours)); historyIdx=0; }
+  }catch(e){}
+}
+
+const loginScreen = document.getElementById("loginScreen");
+const gameMenu    = document.getElementById("gameMenu");
+const gameUI      = document.getElementById("gameUI");
+
+document.getElementById("loginBtn").addEventListener("click", ()=>{
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value.trim();
+  if(!u){ document.getElementById("loginError").textContent="Please enter a username."; return; }
+  if(!p){ document.getElementById("loginError").textContent="Please enter a password."; return; }
+  username = u;
+  document.getElementById("loginError").textContent="";
+  loadColoursForAccount();
+  loginScreen.style.display="none";
+  showGameMenu();
+});
+document.getElementById("loginUser").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("loginPass").focus(); });
+document.getElementById("loginPass").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("loginBtn").click(); });
+
+// ======================= AVATAR EDITOR =======================
+const partColours = { head:"#f9c5a0", torso:"#d8c2ef", leftArm:"#f9c5a0", rightArm:"#f9c5a0", leftLeg:"#333333", rightLeg:"#333333" };
+const colourHistory = [JSON.stringify(partColours)]; let historyIdx=0;
+function pushHistory(){ colourHistory.splice(historyIdx+1); colourHistory.push(JSON.stringify(partColours)); historyIdx=colourHistory.length-1; }
+function undoColour(){ if(historyIdx<=0)return; historyIdx--; Object.assign(partColours,JSON.parse(colourHistory[historyIdx])); applyLocalCustomization(); drawAvatarPreview(); broadcastAppearance(); saveColoursForAccount(); }
+function redoColour(){ if(historyIdx>=colourHistory.length-1)return; historyIdx++; Object.assign(partColours,JSON.parse(colourHistory[historyIdx])); applyLocalCustomization(); drawAvatarPreview(); broadcastAppearance(); saveColoursForAccount(); }
+let activeTool="bucket", selectedColour="#d8c2ef";
+const palette=["#f9c5a0","#e8a87c","#c67f5a","#8d4f2b","#4a2411","#d8c2ef","#e8281e","#3a8fd8","#3db85a","#f5a623","#f9e84a","#ffffff","#aaaaaa","#333333","#111111","#ff9eb5","#7ec8e3","#b5e8b5","#ffe0b2","#e1bee7"];
+
+function drawAvatarPreview(){
+  const c=document.getElementById("avatarCanvas"); if(!c)return;
+  const W=c.width,H=c.height; const ctx=c.getContext("2d"); ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#f0f2f8"; ctx.fillRect(0,0,W,H);
+  const u=Math.min(W,H),midX=W*0.5,bot=H*0.86;
+  const headW=u*0.22,headH=u*0.22,torsoW=u*0.31,torsoH=u*0.26,armW=u*0.13,armH=u*0.26,legW=u*0.14,legH=u*0.28;
+  const gap=u*0.015,neckH=u*0.02,legGap=u*0.012,rad=u*0.045;
+  const torsoTop=bot-legH-torsoH,torsoX=midX-torsoW/2,headTop=torsoTop-neckH-headH,headX=midX-headW/2;
+  const armTop=torsoTop,lArmX=torsoX-gap-armW,rArmX=torsoX+torsoW+gap;
+  const legTop=bot-legH,lLegX=midX-legGap/2-legW,rLegX=midX+legGap/2;
+  ctx.fillStyle="rgba(0,0,0,0.10)"; ctx.beginPath(); ctx.ellipse(midX,bot+u*0.018,torsoW*0.55,u*0.022,0,0,Math.PI*2); ctx.fill();
+  function part(col,x,y,w,h){ctx.beginPath();ctx.roundRect(x,y,w,h,rad);ctx.fillStyle=col;ctx.fill();ctx.beginPath();ctx.roundRect(x,y,w,h,rad);ctx.strokeStyle="rgba(0,0,0,0.55)";ctx.lineWidth=Math.max(1.5,u*0.012);ctx.stroke();}
+  part(partColours.leftLeg,lLegX,legTop,legW,legH); part(partColours.rightLeg,rLegX,legTop,legW,legH);
+  part(partColours.torso,torsoX,torsoTop,torsoW,torsoH);
+  part(partColours.leftArm,lArmX,armTop,armW,armH); part(partColours.rightArm,rArmX,armTop,armW,armH);
+  part(partColours.head,headX,headTop,headW,headH);
+  const eyeY=headTop+headH*0.38,eyeW=headW*0.18,eyeH=headH*0.20,eyeGap=headW*0.16;
+  ctx.fillStyle="#222";
+  ctx.beginPath(); ctx.roundRect(midX-eyeGap/2-eyeW,eyeY,eyeW,eyeH,2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(midX+eyeGap/2,eyeY,eyeW,eyeH,2); ctx.fill();
+  if(hoverPart){const rects={head:[headX,headTop,headW,headH],torso:[torsoX,torsoTop,torsoW,torsoH],leftArm:[lArmX,armTop,armW,armH],rightArm:[rArmX,armTop,armW,armH],leftLeg:[lLegX,legTop,legW,legH],rightLeg:[rLegX,legTop,legW,legH]};const rr=rects[hoverPart];if(rr){ctx.save();ctx.globalAlpha=0.22;ctx.fillStyle="#fff";ctx.beginPath();ctx.roundRect(...rr,rad);ctx.fill();ctx.globalAlpha=0.85;ctx.strokeStyle="#e8281e";ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(...rr,rad);ctx.stroke();ctx.restore();}}
+}
+
+function getHitPart(cx,cy,W,H){const u=Math.min(W,H),midX=W*0.5,bot=H*0.86;const headW=u*0.22,headH=u*0.22,torsoW=u*0.40,torsoH=u*0.26,armW=u*0.13,armH=u*0.26,legW=u*0.14,legH=u*0.28,gap=u*0.015,neckH=u*0.02,legGap=u*0.012;const torsoTop=bot-legH-torsoH,torsoX=midX-torsoW/2,headTop=torsoTop-neckH-headH,headX=midX-headW/2,armTop=torsoTop,lArmX=torsoX-gap-armW,rArmX=torsoX+torsoW+gap,legTop=bot-legH,lLegX=midX-legGap/2-legW,rLegX=midX+legGap/2;function hit(x,y,w,h){return cx>=x&&cx<=x+w&&cy>=y&&cy<=y+h;}if(hit(headX,headTop,headW,headH))return"head";if(hit(lArmX,armTop,armW,armH))return"leftArm";if(hit(rArmX,armTop,armW,armH))return"rightArm";if(hit(torsoX,torsoTop,torsoW,torsoH))return"torso";if(hit(lLegX,legTop,legW,legH))return"leftLeg";if(hit(rLegX,legTop,legW,legH))return"rightLeg";return null;}
+function resizeAvatarCanvas(){const c=document.getElementById("avatarCanvas");if(!c)return;const wrap=c.parentElement;const W=wrap.clientWidth||200,H=wrap.clientHeight||240;if(c.width!==W||c.height!==H){c.width=W;c.height=H;}drawAvatarPreview();}
+function buildColourPalette(){const el=document.getElementById("colourSwatches");if(!el)return;el.innerHTML="";palette.forEach(col=>{const sw=document.createElement("div");sw.className="cswatch"+(col===selectedColour?" active":"");sw.style.background=col;sw.title=col;sw.addEventListener("click",()=>{selectedColour=col;refreshColourUI();});el.appendChild(sw);});}
+function refreshColourUI(){document.querySelectorAll(".cswatch").forEach(s=>s.classList.toggle("active",s.title===selectedColour));const prev=document.getElementById("selectedColourPreview");if(prev)prev.style.background=selectedColour;const hex=document.getElementById("selectedColourHex");if(hex)hex.textContent=selectedColour;const ci=document.getElementById("customColourInput");if(ci)ci.value=selectedColour;}
+function setTool(t){activeTool=t;document.getElementById("toolBucket").classList.toggle("active",t==="bucket");document.getElementById("toolBrush").classList.toggle("active",t==="brush");}
+function applyColourToPart(part){if(activeTool==="bucket"){Object.keys(partColours).forEach(k=>partColours[k]=selectedColour);}else{if(part)partColours[part]=selectedColour;}pushHistory();applyLocalCustomization();drawAvatarPreview();broadcastAppearance();saveColoursForAccount();}
+let hoverPart=null;
+function initAvatarCanvas(){const c=document.getElementById("avatarCanvas");if(!c)return;c.addEventListener("mousemove",e=>{const rect=c.getBoundingClientRect();const sx=c.width/rect.width,sy=c.height/rect.height;const cx=(e.clientX-rect.left)*sx,cy=(e.clientY-rect.top)*sy;const p=getHitPart(cx,cy,c.width,c.height);if(p!==hoverPart){hoverPart=p;drawAvatarPreview();}c.style.cursor=p?"pointer":"default";});c.addEventListener("mouseleave",()=>{hoverPart=null;drawAvatarPreview();c.style.cursor="default";});c.addEventListener("click",e=>{const rect=c.getBoundingClientRect();const sx=c.width/rect.width,sy=c.height/rect.height;const cx=(e.clientX-rect.left)*sx,cy=(e.clientY-rect.top)*sy;const p=getHitPart(cx,cy,c.width,c.height);if(activeTool==="bucket"||p)applyColourToPart(p);});}
+function initAvatarEditor(){document.getElementById("toolBucket").addEventListener("click",()=>setTool("bucket"));document.getElementById("toolBrush").addEventListener("click",()=>setTool("brush"));document.getElementById("toolUndo").addEventListener("click",undoColour);document.getElementById("toolRedo").addEventListener("click",redoColour);document.getElementById("customColourInput").addEventListener("input",e=>{selectedColour=e.target.value;refreshColourUI();});buildColourPalette();refreshColourUI();initAvatarCanvas();const wrap=document.querySelector(".avatar-viewer-wrap");if(wrap&&window.ResizeObserver)new ResizeObserver(resizeAvatarCanvas).observe(wrap);}
+let avatarEditorInited=false;
+
+// ======================= GAME MENU =======================
+function showGameMenu(){gameMenu.style.display="flex";document.getElementById("profileUsername").textContent=username;document.getElementById("profileJoin").textContent="Join Date: "+new Date().toISOString().slice(0,10);populateFriends();populateGames();if(!avatarEditorInited){initAvatarEditor();avatarEditorInited=true;}requestAnimationFrame(resizeAvatarCanvas);}
+function populateFriends(){document.getElementById("friendList").innerHTML='<div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;color:#aaa;text-align:center;padding:10px;">No friends yet.</div>';}
+function populateGames(){const gl=document.getElementById("gameList");gl.innerHTML="";const d=document.createElement("div");d.className="game-list-item";d.innerHTML='<div class="game-thumb">&#9654;</div><div><div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;">Rotro World</div><div style="font-size:11px;color:#888;font-family:'Nunito Sans'">Multiplayer 3D World &mdash; Dedicated Server</div></div><button class="play-btn">Play</button>';d.querySelector(".play-btn").addEventListener("click",enterGame);gl.appendChild(d);}
+
+function enterGame(){
+  gameMenu.style.display="none";
+  gameUI.style.display="block";
+  document.getElementById("mpPanel").style.display="block";
+  inGame=true;
+  applyLocalCustomization();
+  // Tell the server we're joining with our name and colours
+  socket.emit("join", { name: username, parts: {...partColours} });
+  updateMPPanel();
+}
+
+function leaveGame(){
+  inGame=false;
+  gameMenu.style.display="flex";
+  gameUI.style.display="none";
+  document.getElementById("mpPanel").style.display="none";
+  // Tell the server we're leaving — server handles broadcasting to others
+  socket.emit("leave");
+  // Clear remote players from the scene
+  Object.keys(remotePlayers).forEach(id => removeRemotePlayer(id));
+  drawAvatarPreview();
+}
+
+// ======================= MULTIPLAYER — SERVER EVENTS =======================
+
+// Server sends the current world when we join
+socket.on("world_state", (players) => {
+  players.forEach(p => {
+    const mesh = buildRemoteCharacter(p.parts);
+    remotePlayers[p.id] = { ...mesh, name: p.name, animT: 0, moving: false };
+    remotePlayers[p.id].grp.position.set(p.x, p.y, p.z);
+    remotePlayers[p.id].grp.rotation.y = p.ry || 0;
+    makeTag(p.id, p.name);
+  });
+  updateMPPanel();
+});
+
+// A new player joined after us
+socket.on("player_joined", (p) => {
+  if(remotePlayers[p.id]) return; // already tracked
+  const mesh = buildRemoteCharacter(p.parts);
+  remotePlayers[p.id] = { ...mesh, name: p.name, animT: 0, moving: false };
+  makeTag(p.id, p.name);
+  updateMPPanel();
+});
+
+// A player moved
+socket.on("player_moved", (data) => {
+  const rp = remotePlayers[data.id];
+  if(!rp) return;
+  rp.grp.position.set(data.x, data.y, data.z);
+  rp.grp.rotation.y = data.ry;
+  rp.moving = data.moving;
+});
+
+// A player changed their colours
+socket.on("player_appearance", ({ id, parts }) => {
+  const rp = remotePlayers[id];
+  if(!rp) return;
+  Object.keys(rp.mats).forEach(k => { if(parts[k]) rp.mats[k].color.set(parts[k]); });
+});
+
+// A player left
+socket.on("player_left", ({ id }) => removeRemotePlayer(id));
+
+// Chat from server (includes system messages and other players)
+socket.on("chat", (data) => {
+  if(data.system){
+    addChatMsg("", data.msg, true);
+  } else if(data.id !== socket.id) {
+    // Only show messages from others (we already show our own locally)
+    addChatMsg(data.name, data.msg);
+    const rp = remotePlayers[data.id];
+    if(rp) createBubble(data.name + ": " + data.msg, rp);
+  }
+});
+
+function broadcastAppearance(){
+  if(socket.connected) socket.emit("appearance", { parts: {...partColours} });
+}
+
+// ======================= REMOTE CHARACTER MESH =======================
+function buildRemoteCharacter(parts){
+  const p=parts||{}; const grp=new THREE.Group(); scene.add(grp);
+  const mats={head:new THREE.MeshStandardMaterial({color:new THREE.Color(p.head||"#f9c5a0")}),torso:new THREE.MeshStandardMaterial({color:new THREE.Color(p.torso||"#d8c2ef")}),leftArm:new THREE.MeshStandardMaterial({color:new THREE.Color(p.leftArm||"#f9c5a0")}),rightArm:new THREE.MeshStandardMaterial({color:new THREE.Color(p.rightArm||"#f9c5a0")}),leftLeg:new THREE.MeshStandardMaterial({color:new THREE.Color(p.leftLeg||"#333333")}),rightLeg:new THREE.MeshStandardMaterial({color:new THREE.Color(p.rightLeg||"#333333")})};
+  const t=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.8,0.8),mats.torso);t.castShadow=true;grp.add(t);
+  const h=new THREE.Mesh(new THREE.BoxGeometry(1.2,1.2,1.2),mats.head);h.position.y=1.6;grp.add(h);
+  const aGeo=new THREE.BoxGeometry(0.8,1.8,0.8);
+  function remLimb(geo,mat,py,px,posY){const j=new THREE.Group();const m=new THREE.Mesh(geo,mat);m.position.y=py;m.castShadow=true;j.add(m);j.position.set(px,posY,0);grp.add(j);return j;}
+  const la=remLimb(aGeo,mats.leftArm,-0.9,-1.2,0.9);const ra=remLimb(aGeo,mats.rightArm,-0.9,1.2,0.9);
+  const lGeo=new THREE.BoxGeometry(0.8,1.8,0.8);
+  const ll=remLimb(lGeo,mats.leftLeg,-0.9,-0.4,-0.9);const rl=remLimb(lGeo,mats.rightLeg,-0.9,0.4,-0.9);
+  grp.position.y=hipHeight;
+  return{grp,mats,la,ra,ll,rl};
+}
+
+function removeRemotePlayer(id){
+  const rp=remotePlayers[id];if(!rp)return;
+  scene.remove(rp.grp);
+  const tag=document.getElementById("tag_"+id);if(tag)tag.remove();
+  delete remotePlayers[id];
+  updateMPPanel();
+}
+
+function updateMPPanel(){
+  const list=document.getElementById("mpPlayerList");list.innerHTML="";
+  const self=document.createElement("div");self.className="mp-player";
+  self.innerHTML='<div class="mp-dot"></div>'+(username||"You")+" (you)";list.appendChild(self);
+  Object.values(remotePlayers).forEach(rp=>{const d=document.createElement("div");d.className="mp-player";d.innerHTML='<div class="mp-dot"></div>'+rp.name;list.appendChild(d);});
+}
+
+// ===================== INPUT =======================
+let keys={},rightMouseDown=false,prevMX=0,prevMY=0,yaw=0,pitch=0,firstPerson=false;
+document.addEventListener("keydown",e=>{if(chatTyping){if(e.key==="Escape"){closeChatInput();return;}if(e.key==="Enter"){submitChat();return;}return;}keys[e.key.toLowerCase()]=true;if(e.key==="v"){firstPerson=!firstPerson;if(firstPerson)document.body.requestPointerLock();else if(document.pointerLockElement===document.body)document.exitPointerLock();}if(e.key==="Escape"&&firstPerson){firstPerson=false;if(document.pointerLockElement===document.body)document.exitPointerLock();}if(e.key==="t"||e.key==="/"){e.preventDefault();openChat();}});
+document.addEventListener("pointerlockchange",()=>{if(document.pointerLockElement!==document.body&&firstPerson)firstPerson=false;});
+document.addEventListener("keyup",e=>{if(!chatTyping)keys[e.key.toLowerCase()]=false;});
+document.addEventListener("mousedown",e=>{if(e.button===2){rightMouseDown=true;prevMX=e.clientX;prevMY=e.clientY;}});
+document.addEventListener("mouseup",e=>{if(e.button===2)rightMouseDown=false;});
+document.addEventListener("contextmenu",e=>e.preventDefault());
+document.addEventListener("mousemove",e=>{if(document.pointerLockElement===document.body){yaw-=e.movementX*0.002;pitch-=e.movementY*0.002;pitch=Math.max(-1.4,Math.min(1.4,pitch));}else if(rightMouseDown){yaw-=(e.clientX-prevMX)*0.003;pitch-=(e.clientY-prevMY)*0.003;pitch=Math.max(-1.4,Math.min(1.4,pitch));prevMX=e.clientX;prevMY=e.clientY;}});
+
+// ===================== MOVEMENT =======================
+let velocity=new THREE.Vector3(),velocityY=0,onGround=true;
+const walkSpeed=0.15,sprintSpeed=0.32,accel=0.1,decel=0.1,gravity=-0.025,jumpPower=0.45;
+function move(){const fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));const right=new THREE.Vector3(Math.sin(yaw+Math.PI/2),0,Math.cos(yaw+Math.PI/2));const dir=new THREE.Vector3();if(keys["w"])dir.add(fwd);if(keys["s"])dir.sub(fwd);if(keys["a"])dir.sub(right);if(keys["d"])dir.add(right);const speed=keys["shift"]?sprintSpeed:walkSpeed;if(dir.length()>0){dir.normalize();velocity.x=THREE.MathUtils.lerp(velocity.x,dir.x*speed,accel);velocity.z=THREE.MathUtils.lerp(velocity.z,dir.z*speed,accel);character.rotation.y=Math.atan2(dir.x,dir.z);}else{velocity.x=THREE.MathUtils.lerp(velocity.x,0,decel);velocity.z=THREE.MathUtils.lerp(velocity.z,0,decel);}character.position.add(velocity);if(keys[" "]&&onGround){velocityY=jumpPower;onGround=false;}}
+function gravityUpdate(){velocityY+=gravity;character.position.y+=velocityY;if(character.position.y<=hipHeight){character.position.y=hipHeight;velocityY=0;onGround=true;}}
+
+// ===================== CHARACTER ANIM =======================
+let animTimer=0;
+function animateCharacter(){const moving=Math.abs(velocity.x)+Math.abs(velocity.z)>0.02;animTimer+=0.15;const swing=Math.sin(animTimer)*0.6;if(moving){leftArm.rotation.x=THREE.MathUtils.lerp(leftArm.rotation.x,swing,0.3);rightArm.rotation.x=THREE.MathUtils.lerp(rightArm.rotation.x,-swing,0.3);leftLeg.rotation.x=THREE.MathUtils.lerp(leftLeg.rotation.x,-swing,0.3);rightLeg.rotation.x=THREE.MathUtils.lerp(rightLeg.rotation.x,swing,0.3);}else{[leftArm,rightArm,leftLeg,rightLeg].forEach(l=>l.rotation.x=THREE.MathUtils.lerp(l.rotation.x,0,0.15));}}
+function updateRemotePlayers(){Object.values(remotePlayers).forEach(rp=>{if(!rp.grp)return;rp.animT=(rp.animT||0)+(rp.moving?0.15:0.05);const sw=rp.moving?Math.sin(rp.animT)*0.6:0;rp.la.rotation.x=THREE.MathUtils.lerp(rp.la.rotation.x,sw,0.3);rp.ra.rotation.x=THREE.MathUtils.lerp(rp.ra.rotation.x,-sw,0.3);rp.ll.rotation.x=THREE.MathUtils.lerp(rp.ll.rotation.x,-sw,0.3);rp.rl.rotation.x=THREE.MathUtils.lerp(rp.rl.rotation.x,sw,0.3);});}
+
+let broadcastTick=0;
+function broadcastPosition(){if(!inGame)return;broadcastTick++;if(broadcastTick%2!==0)return;const moving=Math.abs(velocity.x)+Math.abs(velocity.z)>0.02;socket.emit("move",{x:character.position.x,y:character.position.y,z:character.position.z,ry:character.rotation.y,moving});}
+
+// ===================== CAMERA =======================
+function updateCamera(){const headPos=head.getWorldPosition(new THREE.Vector3());if(firstPerson){camera.position.copy(headPos);camera.rotation.order="YXZ";camera.rotation.y=yaw;camera.rotation.x=pitch;character.rotation.y=yaw;return;}const offset=new THREE.Vector3(0,7,13);offset.applyEuler(new THREE.Euler(pitch,yaw,0,"YXZ"));camera.position.copy(character.position).add(offset);camera.lookAt(headPos);}
+
+// ===================== NAME TAGS =======================
+const playerTags={};
+function makeTag(id,name){if(!playerTags[id]){const div=document.createElement("div");div.className="playerTag";div.id="tag_"+id;div.textContent=name;document.getElementById("gameUI").appendChild(div);playerTags[id]=div;}playerTags[id].textContent=name;return playerTags[id];}
+function updateNameTags(){const hp=head.getWorldPosition(new THREE.Vector3());hp.y+=1.2;const sv=hp.clone().project(camera);const selfTag=makeTag("self",username);selfTag.style.left=((sv.x*0.5+0.5)*window.innerWidth)+"px";selfTag.style.top=(((-sv.y*0.5+0.5)*window.innerHeight)-10)+"px";selfTag.style.display=firstPerson?"none":"block";Object.entries(remotePlayers).forEach(([id,rp])=>{if(!rp.grp){const t=document.getElementById("tag_"+id);if(t)t.style.display="none";return;}const fhp=new THREE.Vector3().copy(rp.grp.position);fhp.y+=4;const fv=fhp.clone().project(camera);const tag=makeTag(id,rp.name);tag.style.left=((fv.x*0.5+0.5)*window.innerWidth)+"px";tag.style.top=(((-fv.y*0.5+0.5)*window.innerHeight)-10)+"px";tag.style.display="block";});}
+
+// ===================== CHAT =======================
+const chatLog=document.getElementById("chatLog"),chatInputEl=document.getElementById("chatInputEl"),chatBoxEl=document.getElementById("chatBox");
+const bubbleChats=[];
+function openChat(){chatTyping=true;chatBoxEl.classList.add("visible");chatInputEl.focus();}
+function closeChatInput(){chatTyping=false;chatInputEl.blur();chatBoxEl.classList.remove("visible");}
+function toggleChat(){chatBoxEl.classList.contains("visible")?closeChatInput():openChat();}
+function submitChat(){const msg=chatInputEl.value.trim();if(msg&&username){addChatMsg(username,msg);createBubble(username+": "+msg,null);socket.emit("chat",{msg});chatInputEl.value="";}chatInputEl.focus();}
+chatInputEl.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submitChat();}if(e.key==="Escape"){e.preventDefault();closeChatInput();}e.stopPropagation();});
+chatInputEl.addEventListener("focus",()=>{chatTyping=true;});
+chatInputEl.addEventListener("blur",()=>{chatTyping=false;});
+document.getElementById("chatSendBtn").addEventListener("click",submitChat);
+function addChatMsg(uname,msg,isSystem){const d=document.createElement("div");d.className=isSystem?"msg system":"msg";d.innerHTML=isSystem?msg:'<span class="uname">'+uname+':</span> '+msg;chatLog.appendChild(d);chatLog.scrollTop=chatLog.scrollHeight;if(isSystem&&!chatBoxEl.classList.contains("visible")){chatBoxEl.classList.add("visible");setTimeout(()=>{if(!chatTyping)chatBoxEl.classList.remove("visible");},4000);}}
+function createBubble(msg,rp){const div=document.createElement("div");div.className="bubbleChat";div.textContent=msg;document.getElementById("gameUI").appendChild(div);const entry={el:div,rp};bubbleChats.push(entry);setTimeout(()=>{div.remove();bubbleChats.splice(bubbleChats.findIndex(b=>b.el===div),1);},5000);}
+function updateBubbles(){bubbleChats.forEach(b=>{let wp;if(b.rp&&b.rp.grp){wp=new THREE.Vector3().copy(b.rp.grp.position);wp.y+=4;}else{wp=head.getWorldPosition(new THREE.Vector3());wp.y+=2.4;}wp.project(camera);b.el.style.left=((wp.x*0.5+0.5)*window.innerWidth)+"px";b.el.style.top=((-wp.y*0.5+0.5)*window.innerHeight)+"px";});}
+
+// ===================== TOP BAR =======================
+document.getElementById("btnGameMenu").addEventListener("click",leaveGame);
+document.getElementById("btnSettings").addEventListener("click",()=>{document.getElementById("settingsModal").style.display="flex";});
+document.getElementById("closeSettings").addEventListener("click",()=>{document.getElementById("settingsModal").style.display="none";});
+document.getElementById("settingsModal").addEventListener("click",e=>{if(e.target===document.getElementById("settingsModal"))document.getElementById("settingsModal").style.display="none";});
+document.getElementById("btnChat").addEventListener("click",toggleChat);
+
+// ===================== MAIN LOOP =======================
+function loop(){requestAnimationFrame(loop);if(inGame){move();gravityUpdate();animateCharacter();updateRemotePlayers();broadcastPosition();updateCamera();updateNameTags();updateBubbles();cloudTexture.offset.x+=0.00004;}renderer.render(scene,camera);}
+loop();
+window.addEventListener("resize",()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+</script>
+</body>
+</html>
